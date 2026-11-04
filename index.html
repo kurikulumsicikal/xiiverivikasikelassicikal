@@ -48,7 +48,11 @@
 
         /* Kotak Resume Keseluruhan Data di Bawah */
         .final-summary-box { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px; padding: 18px; margin-top: 25px; margin-bottom: 20px; }
-        .final-summary-title { margin-top: 0; color: #0f172a; font-size: 16px; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; text-transform: uppercase; }
+        .final-summary-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px; }
+        .final-summary-title { margin: 0; color: #0f172a; font-size: 16px; font-weight: bold; text-transform: uppercase; }
+        .btn-print { background-color: #0d9488; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .btn-print:hover { background-color: #0f766e; }
+
         .final-summary-list { font-size: 14px; color: #334155; line-height: 1.6; }
         .final-summary-row { display: flex; margin-bottom: 6px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
         .final-summary-label { width: 40%; font-weight: 600; color: #475569; }
@@ -56,6 +60,64 @@
         .val-koreksi-text { color: #dc2626; font-weight: 600; }
 
         .statement-box { background: #fef9c3; border: 1px solid #fde047; border-radius: 10px; padding: 15px; text-align: center; margin-top: 20px; font-size: 13px; color: #713f12; line-height: 1.5; font-weight: 600; }
+
+        /* Pengaturan Cetak Khusus Ukuran Kertas A4 */
+        @media print {
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .container {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border-top: none !important;
+            }
+            /* Sembunyikan elemen pencarian, instruksi, kartu verifikasi satu per satu, dan tombol cetak */
+            .search-box, .subtitle, h2, .loading, .error-box, .resume-box, .instruction, .data-item-card, .btn-print, .statement-box {
+                display: none !important;
+            }
+            /* Tampilkan dan rapikan kotak resume untuk cetak A4 */
+            .final-summary-box {
+                border: 2px solid #000000 !important;
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 20px !important;
+                page-break-inside: avoid;
+            }
+            .final-summary-header {
+                border-bottom: 2px solid #000000 !important;
+                text-align: center;
+                display: block !important;
+            }
+            .final-summary-title {
+                font-size: 18px !important;
+                color: #000000 !important;
+                text-align: center;
+            }
+            .final-summary-row {
+                border-bottom: 1px solid #cbd5e1 !important;
+                padding-bottom: 6px !important;
+                margin-bottom: 8px !important;
+            }
+            .final-summary-label {
+                color: #000000 !important;
+            }
+            .final-summary-val {
+                color: #000000 !important;
+            }
+            .val-koreksi-text {
+                color: #991b1b !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -98,9 +160,12 @@
         
         <div id="dataCardList"></div>
 
-        <!-- Kotak Resume Keseluruhan Data di Bawah -->
+        <!-- Kotak Resume Keseluruhan Data di Bawah dengan Tombol Cetak A4 -->
         <div class="final-summary-box">
-            <div class="final-summary-title">📄 Resume Keseluruhan Data Anda</div>
+            <div class="final-summary-header">
+                <div class="final-summary-title">📄 Resume Keseluruhan Data Anda</div>
+                <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan A4</button>
+            </div>
             <div class="final-summary-list" id="finalSummaryContent">
                 <!-- Data keseluruhan siswa akan muncul di sini secara otomatis -->
             </div>
@@ -170,7 +235,6 @@
                         { label: "Anak", val: data.anakKe ? `Anak ke-${data.anakKe}` : '-' }
                     ];
 
-                    // Simpan status koreksi awal dari server jika ada
                     loadedRowsData.forEach((row, idx) => {
                         let savedVal = data.statusKesesuaian ? data.statusKesesuaian[row.label] : "";
                         if (savedVal && savedVal !== "Sesuai") {
@@ -217,7 +281,6 @@
                 badgeHtml = `<div id="badgeContainer_${index}"></div>`;
             }
 
-            // Membentuk baris resume keseluruhan data di bawah
             finalSummaryHtml += `
                 <div class="final-summary-row">
                     <div class="final-summary-label">${row.label}</div>
@@ -225,7 +288,6 @@
                 </div>
             `;
 
-            // Kartu interaktif verifikasi per item
             cardsHtml += `
                 <div class="data-item-card">
                     <div class="data-label">${row.label}</div>
