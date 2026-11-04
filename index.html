@@ -165,4 +165,136 @@
                         { label: "Pekerjaan Ibu", val: data.pekerjaanIbu || '-' },
                         { label: "Rombel Saat Ini", val: data.rombel || '-' },
                         { label: "Sekolah Asal", val: data.sekolahAsal || '-' },
-                        { label: "Anak", val: data.
+                        { label: "Anak", val: data.anakKe ? `Anak ke-${data.anakKe}` : '-' }
+                    ];
+
+                    totalFieldsCount = rows.length;
+                    let cardsHtml = "";
+                    let finalSummaryHtml = "";
+                    
+                    rows.forEach((row, index) => {
+                        let savedVal = data.statusKesesuaian ? data.statusKesesuaian[row.label] : "";
+                        let badgeHtml = "";
+                        let defaultInputVal = "";
+
+                        if (savedVal === "Sesuai") {
+                            badgeHtml = `<div id="badgeContainer_${index}"><div class="status-badge badge-sesuai">✓ Status: Sesuai</div></div>`;
+                        } else if (savedVal && savedVal !== "") {
+                            badgeHtml = `<div id="badgeContainer_${index}"><div class="status-badge badge-koreksi">✎ Koreksi Tercatat: <strong>${savedVal}</strong></div></div>`;
+                            defaultInputVal = savedVal;
+                        } else {
+                            badgeHtml = `<div id="badgeContainer_${index}"></div>`;
+                        }
+
+                        // Membentuk baris resume keseluruhan data di bawah
+                        finalSummaryHtml += `
+                            <div class="final-summary-row">
+                                <div class="final-summary-label">${row.label}</div>
+                                <div class="final-summary-val">: ${row.val}</div>
+                            </div>
+                        `;
+
+                        // Kartu interaktif verifikasi per item
+                        cardsHtml += `
+                            <div class="data-item-card">
+                                <div class="data-label">${row.label}</div>
+                                <div class="data-value">${row.val}</div>
+                                ${badgeHtml}
+                                <div class="action-row" id="actionContainer_${index}" style="margin-top: 10px;">
+                                    <button class="btn-sesuai" onclick="kirimData('${row.label}', 'Sesuai', ${index})">Sesuai</button>
+                                    <button class="btn-koreksi" onclick="bukaFormKoreksi(${index})">Koreksi</button>
+                                </div>
+                                <div class="edit-container" id="editContainer_${index}">
+                                    <input type="text" id="editInput_${index}" class="edit-input" value="${defaultInputVal}" placeholder="Ketik perbaikan yang benar...">
+                                    <button class="btn-kirim" onclick="kirimKoreksiData('${row.label}', ${index})">Kirim Perbaikan</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById('dataCardList').innerHTML = cardsHtml;
+                    document.getElementById('finalSummaryContent').innerHTML = finalSummaryHtml;
+                    resultCard.style.display = 'block';
+                    updateResume();
+                } else {
+                    errorBox.innerHTML = 'Data siswa dengan NIPD <strong>' + nipd + '</strong> tidak ditemukan di database sekolah.';
+                    errorBox.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                loadingDiv.style.display = 'none';
+                errorBox.innerHTML = 'Gagal terhubung ke server sekolah. Periksa kembali jaringan internet Anda.';
+                errorBox.style.display = 'block';
+                console.error(error);
+            });
+    }
+
+    function bukaFormKoreksi(index) {
+        let container = document.getElementById(`editContainer_${index}`);
+        container.style.display = container.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function updateResume() {
+        let sesuai = 0;
+        let koreksi = 0;
+        let belum = 0;
+
+        for (let i = 0; i < totalFieldsCount; i++) {
+            let badgeContainer = document.getElementById(`badgeContainer_${i}`);
+            let badgeText = badgeContainer ? badgeContainer.innerText : "";
+
+            if (badgeText.includes("Sesuai")) {
+                sesuai++;
+            } else if (badgeText.includes("Koreksi Tercatat")) {
+                koreksi++;
+            } else {
+                belum++;
+            }
+        }
+
+        document.getElementById('countSesuai').innerText = sesuai;
+        document.getElementById('countKoreksi').innerText = koreksi;
+        document.getElementById('countBelum').innerText = belum;
+    }
+
+    function kirimData(fieldLabel, teksKirim, index) {
+        let payload = {
+            nipd: currentSiswaNipd,
+            nama: currentSiswaNama,
+            field: fieldLabel,
+            koreksi: teksKirim
+        };
+
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(response => {
+            let badgeContainer = document.getElementById(`badgeContainer_${index}`);
+            if(teksKirim === 'Sesuai') {
+                badgeContainer.innerHTML = `<div class="status-badge badge-sesuai">✓ Status: Sesuai</div>`;
+                document.getElementById(`editContainer_${index}`).style.display = 'none';
+            } else {
+                badgeContainer.innerHTML = `<div class="status-badge badge-koreksi">✎ Koreksi Tercatat: <strong>${teksKirim}</strong></div>`;
+                bukaFormKoreksi(index);
+            }
+            updateResume();
+        })
+        .catch(err => {
+            console.error(err);
+        });
+    }
+
+    function kirimKoreksiData(fieldLabel, index) {
+        let inputVal = document.getElementById(`editInput_${index}`).value.trim();
+        if (!inputVal) {
+            return;
+        }
+        
+        kirimData(fieldLabel, inputVal, index);
+    }
+</script>
+
+</body>
+</html>
