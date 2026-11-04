@@ -20,7 +20,7 @@
         .result-card { display: none; margin-top: 15px; }
         .instruction { background-color: #fef9c3; border: 1px solid #fde047; color: #713f12; padding: 12px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 15px; line-height: 1.4; }
         
-        /* Kotak Resume */
+        /* Kotak Resume Status Progress di Atas */
         .resume-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
         .resume-title { margin-top: 0; color: #166534; font-size: 15px; margin-bottom: 10px; font-weight: bold; }
         .resume-grid { display: flex; gap: 10px; text-align: center; }
@@ -45,6 +45,15 @@
         .status-badge { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-top: 6px; }
         .badge-sesuai { background-color: #dcfce7; color: #166534; width: 100%; text-align: center; }
         .badge-koreksi { background-color: #fee2e2; color: #991b1b; width: 100%; word-break: break-word; }
+
+        /* Kotak Resume Keseluruhan Data di Bawah */
+        .final-summary-box { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px; padding: 18px; margin-top: 25px; margin-bottom: 20px; }
+        .final-summary-title { margin-top: 0; color: #0f172a; font-size: 16px; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; text-transform: uppercase; }
+        .final-summary-list { font-size: 14px; color: #334155; line-height: 1.6; }
+        .final-summary-row { display: flex; margin-bottom: 6px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+        .final-summary-label { width: 40%; font-weight: 600; color: #475569; }
+        .final-summary-val { width: 60%; font-weight: 500; color: #0f172a; word-break: break-word; }
+
         .statement-box { background: #fef9c3; border: 1px solid #fde047; border-radius: 10px; padding: 15px; text-align: center; margin-top: 20px; font-size: 13px; color: #713f12; line-height: 1.5; font-weight: 600; }
     </style>
 </head>
@@ -63,7 +72,7 @@
     <div id="errorBox" class="error-box"></div>
 
     <div id="resultCard" class="result-card">
-        <!-- Kotak Resume Status Verifikasi -->
+        <!-- Kotak Resume Progress Status -->
         <div class="resume-box">
             <div class="resume-title">📊 Resume Status Verifikasi Anda</div>
             <div class="resume-grid">
@@ -85,7 +94,16 @@
         <div class="instruction" id="instructionBox">
             💡 <strong>Petunjuk:</strong> Periksa setiap data di bawah. Klik tombol <strong>Sesuai</strong> jika benar, atau klik <strong>Koreksi</strong> untuk mengetik perbaikan data administrasi.
         </div>
+        
         <div id="dataCardList"></div>
+
+        <!-- Kotak Resume Keseluruhan Data di Bawah -->
+        <div class="final-summary-box">
+            <div class="final-summary-title">📄 Resume Keseluruhan Data Anda</div>
+            <div class="final-summary-list" id="finalSummaryContent">
+                <!-- Data keseluruhan siswa akan muncul di sini secara otomatis -->
+            </div>
+        </div>
 
         <div class="statement-box">
             📌 <strong>Pernyataan:</strong> Dengan ini saya menyatakan bahwa seluruh data administrasi di atas telah diperiksa dan sudah sesuai serta benar. Apabila di kemudian hari ternyata masih terdapat kesalahan data, maka hal tersebut sepenuhnya menjadi tanggung jawab saya pribadi.
@@ -94,8 +112,7 @@
 </div>
 
 <script>
-    // URL Web App Kelas XII terbaru Anda
-    const API_URL = "https://script.google.com/macros/s/AKfycbznRREZbmf82YOynbG2GdouoQhSVIfwHszLg1228U70MoKucxpraxL1eXor9SLeeBZ0/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwFgVAImjBXUHg5tFHYuUrFJu_OeZ8fpD5lu_om_1CN5nLx2s35hXjK2WUEXaz7UcZr/exec";
     
     let currentSiswaNama = "";
     let currentSiswaNipd = "";
@@ -148,125 +165,4 @@
                         { label: "Pekerjaan Ibu", val: data.pekerjaanIbu || '-' },
                         { label: "Rombel Saat Ini", val: data.rombel || '-' },
                         { label: "Sekolah Asal", val: data.sekolahAsal || '-' },
-                        { label: "Anak", val: data.anakKe ? `Anak ke-${data.anakKe}` : '-' }
-                    ];
-
-                    totalFieldsCount = rows.length;
-                    let cardsHtml = "";
-                    
-                    rows.forEach((row, index) => {
-                        let savedVal = data.statusKesesuaian ? data.statusKesesuaian[row.label] : "";
-                        let badgeHtml = "";
-                        let defaultInputVal = "";
-
-                        if (savedVal === "Sesuai") {
-                            badgeHtml = `<div id="badgeContainer_${index}"><div class="status-badge badge-sesuai">✓ Status: Sesuai</div></div>`;
-                        } else if (savedVal && savedVal !== "") {
-                            badgeHtml = `<div id="badgeContainer_${index}"><div class="status-badge badge-koreksi">✎ Koreksi Tercatat: <strong>${savedVal}</strong></div></div>`;
-                            defaultInputVal = savedVal;
-                        } else {
-                            badgeHtml = `<div id="badgeContainer_${index}"></div>`;
-                        }
-
-                        cardsHtml += `
-                            <div class="data-item-card">
-                                <div class="data-label">${row.label}</div>
-                                <div class="data-value">${row.val}</div>
-                                ${badgeHtml}
-                                <div class="action-row" id="actionContainer_${index}" style="margin-top: 10px;">
-                                    <button class="btn-sesuai" onclick="kirimData('${row.label}', 'Sesuai', ${index})">Sesuai</button>
-                                    <button class="btn-koreksi" onclick="bukaFormKoreksi(${index})">Koreksi</button>
-                                </div>
-                                <div class="edit-container" id="editContainer_${index}">
-                                    <input type="text" id="editInput_${index}" class="edit-input" value="${defaultInputVal}" placeholder="Ketik perbaikan yang benar...">
-                                    <button class="btn-kirim" onclick="kirimKoreksiData('${row.label}', ${index})">Kirim Perbaikan</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    document.getElementById('dataCardList').innerHTML = cardsHtml;
-                    resultCard.style.display = 'block';
-                    updateResume();
-                } else {
-                    errorBox.innerHTML = 'Data siswa dengan NIPD <strong>' + nipd + '</strong> tidak ditemukan di database sekolah.';
-                    errorBox.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                loadingDiv.style.display = 'none';
-                errorBox.innerHTML = 'Gagal terhubung ke server sekolah. Periksa kembali jaringan internet Anda.';
-                errorBox.style.display = 'block';
-                console.error(error);
-            });
-    }
-
-    function bukaFormKoreksi(index) {
-        let container = document.getElementById(`editContainer_${index}`);
-        container.style.display = container.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function updateResume() {
-        let sesuai = 0;
-        let koreksi = 0;
-        let belum = 0;
-
-        for (let i = 0; i < totalFieldsCount; i++) {
-            let badgeContainer = document.getElementById(`badgeContainer_${i}`);
-            let badgeText = badgeContainer ? badgeContainer.innerText : "";
-
-            if (badgeText.includes("Sesuai")) {
-                sesuai++;
-            } else if (badgeText.includes("Koreksi Tercatat")) {
-                koreksi++;
-            } else {
-                belum++;
-            }
-        }
-
-        document.getElementById('countSesuai').innerText = sesuai;
-        document.getElementById('countKoreksi').innerText = koreksi;
-        document.getElementById('countBelum').innerText = belum;
-    }
-
-    function kirimData(fieldLabel, teksKirim, index) {
-        let payload = {
-            nipd: currentSiswaNipd,
-            nama: currentSiswaNama,
-            field: fieldLabel,
-            koreksi: teksKirim
-        };
-
-        fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(response => {
-            let badgeContainer = document.getElementById(`badgeContainer_${index}`);
-            if(teksKirim === 'Sesuai') {
-                badgeContainer.innerHTML = `<div class="status-badge badge-sesuai">✓ Status: Sesuai</div>`;
-                document.getElementById(`editContainer_${index}`).style.display = 'none';
-            } else {
-                badgeContainer.innerHTML = `<div class="status-badge badge-koreksi">✎ Koreksi Tercatat: <strong>${teksKirim}</strong></div>`;
-                bukaFormKoreksi(index);
-            }
-            updateResume();
-        })
-        .catch(err => {
-            console.error(err);
-        });
-    }
-
-    function kirimKoreksiData(fieldLabel, index) {
-        let inputVal = document.getElementById(`editInput_${index}`).value.trim();
-        if (!inputVal) {
-            return;
-        }
-        
-        kirimData(fieldLabel, inputVal, index);
-    }
-</script>
-
-</body>
-</html>
+                        { label: "Anak", val: data.
